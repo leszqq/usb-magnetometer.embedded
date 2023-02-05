@@ -1,0 +1,3 @@
+C:/studia/msc/usb-magnetometer/software/usb-magnetometer/build/CMakeFiles/usb-magnetometer.dir
+C:/studia/msc/usb-magnetometer/software/usb-magnetometer/build/CMakeFiles/edit_cache.dir
+C:/studia/msc/usb-magnetometer/software/usb-magnetometer/build/CMakeFiles/rebuild_cache.dir
