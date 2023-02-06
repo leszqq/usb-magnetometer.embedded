@@ -7,6 +7,7 @@
 #include "stdbool.h"
 #include "server.h"
 #include "usart.h"
+#include "sensor.h"
 #include <string.h>
 #define REQUEST_SIZE			2
 #define RX_BUFFER_SIZE			4
@@ -19,7 +20,8 @@ enum message_type{
 	message_type_reset_sensor = 3,
 	message_type_get_reading = 4,
 	message_type_start_stream = 5,
-	message_type_stop_stream = 6
+	message_type_stop_stream = 6,
+	message_type_read_register = 7
 	};
 
 struct request {
@@ -70,6 +72,26 @@ void handle_request_if_any(void) {
 			send_response(message_type_test, 0, NULL, 0);
 			break;
 		}
+		case message_type_init_sensor: {
+			sensor_init();
+			sensor_configure_for_active();
+			send_response(message_type_init_sensor, 0, NULL, 0);
+			break;
+		}
+		case message_type_read_register: {
+			uint16_t reg_content;
+			sensor_read_register(request.data, &reg_content);
+			send_response(message_type_read_register, 0, (uint8_t*) &reg_content, sizeof(reg_content));
+			break;
+		}
+		case message_type_get_reading: {
+			uint16_t readings[3];
+			sensor_read_register(X_CH_RESULT, &readings[0]);
+			sensor_read_register(Z_CH_RESULT, &readings[1]);
+			sensor_read_register(Y_CH_RESULT, &readings[2]);
+			send_response(message_type_get_reading, 0, (uint8_t*) &readings, sizeof(readings));
+			break;
+		}
 		default:
 			break;
 	}
@@ -77,10 +99,16 @@ void handle_request_if_any(void) {
 }
 
 static void send_response(enum message_type type, uint8_t status, const uint8_t* data, uint8_t data_size) {
+	if (data_size > TX_BUFFER_SIZE - 2){
+		Error_Handler();
+	}
+	
 	ctx.tx_buffer[0] = type;
 	ctx.tx_buffer[1] = status;
-	if (NULL != data) {
-		memcpy((void*) data, (void*) &ctx.tx_buffer[2], data_size);
+	if (NULL != data){
+		for(uint8_t i = 0; i < data_size; i++) {
+			ctx.tx_buffer[2 + i] = data[i];
+		}
 	}
 	HAL_UART_Transmit_DMA(&huart2, ctx.tx_buffer, data_size + 2);
 }

@@ -1,0 +1,22 @@
+{
+
+    "version": "0.2.0",
+    "projectName": "usb-magnetometer.embedded",
+    "configurations": [
+        {
+            "name": "Jlink debug",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/usb-magnetometer.embedded.elf",
+            "serverpath": "C:/programy/JLink/JLinkGDBServerCL.exe",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "jlink",
+            "device": "STM32L010C6",
+            "interface": "swd",
+            "runToMain": true,
+            "preLaunchTask": "Build all",
+            "svdFile": "${workspaceFolder}/STM32L0x0.svd"
+        
+        }
+    ]
+}

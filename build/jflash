@@ -1,6 +1,0 @@
-SelectInterface 1 
-Speed 4000 
-LoadFile build/usb-magnetometer.bin 0x08000000 
-Reset 
-Go 
-Exit 

@@ -3,7 +3,7 @@
 BUILD_DIR := build
 BUILD_TYPE ?= Debug
 SHELL := C:\Windows\System32\WindowsPowerShell\v1.0
-CMAKE_PROJECT_NAME := usb-magnetometer
+CMAKE_PROJECT_NAME := usb-magnetometer.embedded
 
 all: build
 
@@ -37,7 +37,7 @@ $(BUILD_DIR)/jflash: $(BUILD_DIR)/$(CMAKE_PROJECT_NAME).bin
 	@echo Go >> $@
 	@echo Exit >> $@
 
-$(BUILD_DIR)/usb-magnetometer.bin: build
+$(BUILD_DIR)/$(CMAKE_PROJECT_NAME).bin: build
 
 jflash: $(BUILD_DIR)/jflash
 	JLink.exe -device $(DEVICE) -CommandFile $<

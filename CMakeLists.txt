@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12)
 # ##############################################################################
 # This cmake configuration is made for STM32 MCUs and STM32 CubeMX generated
 # file structure. Edit your MCU information up to the next border
-project(usb-magnetometer)
+project(usb-magnetometer.embedded)
 set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Project)
 
 set(MCU_FAMILY STM32L0xx)
@@ -38,15 +38,16 @@ set(PROJECT_INCLUDE_DIRECTORIES
 file(GLOB_RECURSE STM32CUBEMX_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/*.c)
-file(GLOB_RECURSE PROJECT_SOURCES
-    ${PROJECT_DIR}/*.cpp
-    ${PROJECT_DIR}/*.c)
+# file(GLOB_RECURSE PROJECT_SOURCES
+#     ${PROJECT_DIR}/*.cpp
+#     ${PROJECT_DIR}/*.c)
 
 # Executable files
 add_executable(${EXECUTABLE}
     ${STM32CUBEMX_SOURCES}
-    ${PROJECT_SOURCES}
-    ${STARTUP_SCRIPT})
+    ${STARTUP_SCRIPT}
+    ${PROJECT_DIR}/src/sensor.c
+    ${PROJECT_DIR}/src/server.c)
 
 # Embedded macros(defines)
 target_compile_definitions(${EXECUTABLE} PRIVATE
