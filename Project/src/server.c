@@ -85,11 +85,9 @@ void handle_request_if_any(void) {
 			break;
 		}
 		case message_type_get_reading: {
-			uint16_t readings[3];
-			sensor_read_register(X_CH_RESULT, &readings[0]);
-			sensor_read_register(Z_CH_RESULT, &readings[1]);
-			sensor_read_register(Y_CH_RESULT, &readings[2]);
-			send_response(message_type_get_reading, 0, (uint8_t*) &readings, sizeof(readings));
+			reading_t result;
+			sensor_read(&result);
+			send_response(message_type_get_reading, 0, (uint8_t*) &result, sizeof(result));
 			break;
 		}
 		default:

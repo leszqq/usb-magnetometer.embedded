@@ -1,4 +1,5 @@
 #include "stm32l0xx.h"
+#include "assert.h"
 
 enum sensor_reg {
     DEVICE_CONFIG = 0x00,
@@ -24,11 +25,27 @@ enum sensor_reg {
     MAGNITUDE_RESULT = 0x14
 };
 
+enum axis {
+    AXIS_X = 0,
+    AXIS_Y,
+    AXIS_Z,
+    AXIS_ALL
+};
+
+typedef struct reading {
+    uint16_t x;
+    uint16_t y;
+    uint16_t z;
+} reading_t;
+static_assert(sizeof(reading_t) == 6);
+
 void sensor_init();
 
 void sensor_configure_for_active();
 
 void sensor_put_to_sleep();
+
+void sensor_read(reading_t* result);
 
 void sensor_start_stream();
 

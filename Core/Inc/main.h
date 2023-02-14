@@ -59,6 +59,7 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define MAG_INT_Pin GPIO_PIN_2
 #define MAG_INT_GPIO_Port GPIOA
+#define MAG_INT_EXTI_IRQn EXTI2_3_IRQn
 #define SPI1_CS_Pin GPIO_PIN_4
 #define SPI1_CS_GPIO_Port GPIOA
 
