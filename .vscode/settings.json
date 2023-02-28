@@ -5,7 +5,8 @@
         "gpio.h": "c",
         "usart.h": "c",
         "sensor_defines.h": "c",
-        "sensor.h": "c"
+        "sensor.h": "c",
+        "stm32l0xx.h": "c"
     },
     "cortex-debug.gdbPath": "C:/programy/Arm_GNU_Toolchain/arm-none-eabi/12.2 rel1/bin/arm-none-eabi-gdb.exe",
     "cortex-debug.JLinkGDBServerPath": "C:/programy/JLink/JLinkGDBServer.exe",

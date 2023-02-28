@@ -1,6 +1,10 @@
 #include "stm32l0xx.h"
 #include "assert.h"
 
+
+#ifndef INC_SENSOR_H_
+#define INC_SENSOR_H_
+
 enum sensor_reg {
     DEVICE_CONFIG = 0x00,
     SENSOR_CONFIG = 0x01,
@@ -12,8 +16,8 @@ enum sensor_reg {
     T_THRX_CONFIG = 0x07,
     CONV_STATUS = 0x08,
     X_CH_RESULT = 0x09,
-    Y_CH_RESULT = 0xA,
-    Z_CH_RESULT = 0xB,
+    Y_CH_RESULT = 0x0A,
+    Z_CH_RESULT = 0x0B,
     TEMP_RESULT = 0x0C,
     AFE_STATUS = 0x0D,
     SYS_STATUS = 0x0E,
@@ -39,16 +43,20 @@ typedef struct reading {
 } reading_t;
 static_assert(sizeof(reading_t) == 6);
 
-void sensor_init();
+void sensor_reset();
+
+void sensor_run();
 
 void sensor_configure_for_active();
 
 void sensor_put_to_sleep();
 
-void sensor_read(reading_t* result);
+void sensor_read();
 
 void sensor_start_stream();
 
 void sensor_stop_stream();
 
 void sensor_read_register(enum sensor_reg reg, uint16_t* content);
+
+#endif /* INC_SENSOR_H_ */

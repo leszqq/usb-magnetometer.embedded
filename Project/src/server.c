@@ -1,9 +1,3 @@
-/*
- * server.c
- *
- *  Created on: Jan 31, 2023
- *      Author: comra
- */
 #include "stdbool.h"
 #include "server.h"
 #include "usart.h"
@@ -11,17 +5,15 @@
 #include <string.h>
 #define REQUEST_SIZE			2
 #define RX_BUFFER_SIZE			4
-#define TX_BUFFER_SIZE			100
+#define TX_BUFFER_SIZE			3100
 
 enum message_type{
 	message_type_test = 0,
-	message_type_init_sensor = 1,
-	message_type_deinit_sensor = 2,
-	message_type_reset_sensor = 3,
-	message_type_get_reading = 4,
-	message_type_start_stream = 5,
-	message_type_stop_stream = 6,
-	message_type_read_register = 7
+	message_type_reset = 1,
+	message_type_get_reading = 2,
+	message_type_start_stream = 3,
+	message_type_stream_chunk = 4,
+	message_type_read_register = 5
 	};
 
 struct request {
@@ -53,12 +45,36 @@ void server_run(void){
 	handle_request_if_any();
 }
 
+void server_send_measurmenets_chunk(const reading_t* const readings, uint16_t size){
+	if (readings == NULL) {
+		Error_Handler();
+	}
+
+	ctx.tx_buffer[0] = message_type_stream_chunk;
+	ctx.tx_buffer[1] = 0x00;
+
+	for(uint16_t i = 0; i < size; i++) {
+		ctx.tx_buffer[2 + i] = ((uint8_t *)readings)[i];
+	}
+
+	//memcpy((void *) &ctx.tx_buffer[2], (void *) readings, size);
+	HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart2, ctx.tx_buffer, size + 2);
+	if (status != HAL_OK) {
+		Error_Handler();
+	}
+}
+
+void server_send_reading(const reading_t* const reading){
+	send_response(message_type_get_reading, 0, (uint8_t*) reading, sizeof(*reading));
+}
+
+
 static void listen_for_request(void) {
 	ctx.got_new_packet = false;
 	HAL_UARTEx_ReceiveToIdle_DMA(&huart2, ctx.rx_buffer, RX_BUFFER_SIZE);
 }
 
-void handle_request_if_any(void) {
+static void handle_request_if_any(void) {
 	if (false == ctx.got_new_packet)
 		return;
 
@@ -72,10 +88,9 @@ void handle_request_if_any(void) {
 			send_response(message_type_test, 0, NULL, 0);
 			break;
 		}
-		case message_type_init_sensor: {
-			sensor_init();
-			sensor_configure_for_active();
-			send_response(message_type_init_sensor, 0, NULL, 0);
+		case message_type_reset: {
+			sensor_reset();
+			send_response(message_type_reset, 0, NULL, 0);
 			break;
 		}
 		case message_type_read_register: {
@@ -85,9 +100,12 @@ void handle_request_if_any(void) {
 			break;
 		}
 		case message_type_get_reading: {
-			reading_t result;
-			sensor_read(&result);
-			send_response(message_type_get_reading, 0, (uint8_t*) &result, sizeof(result));
+			sensor_read();
+			break;
+		}
+		case message_type_start_stream: {
+			sensor_start_stream();
+			send_response(message_type_start_stream, 0, NULL, 0);
 			break;
 		}
 		default:
@@ -96,11 +114,9 @@ void handle_request_if_any(void) {
 	listen_for_request();
 }
 
-static void send_response(enum message_type type, uint8_t status, const uint8_t* data, uint8_t data_size) {
-	if (data_size > TX_BUFFER_SIZE - 2){
-		Error_Handler();
-	}
-	
+
+
+static void send_response(enum message_type type, uint8_t status, const uint8_t* data, uint8_t data_size) {	
 	ctx.tx_buffer[0] = type;
 	ctx.tx_buffer[1] = status;
 	if (NULL != data){
@@ -108,7 +124,10 @@ static void send_response(enum message_type type, uint8_t status, const uint8_t*
 			ctx.tx_buffer[2 + i] = data[i];
 		}
 	}
-	HAL_UART_Transmit_DMA(&huart2, ctx.tx_buffer, data_size + 2);
+	HAL_StatusTypeDef hal_status = HAL_UART_Transmit_DMA(&huart2, ctx.tx_buffer, data_size + 2);
+	if (hal_status != HAL_OK) {
+		Error_Handler();
+	}
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size){
@@ -117,6 +136,9 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size){
 		if (REQUEST_SIZE == ctx.received_byte_count){
 			ctx.received_byte_count = 0;
 			ctx.got_new_packet = true;
+		} else if (REQUEST_SIZE <= ctx.received_byte_count) {
+			// TODO: handle error, ex. wait for 100 ms and call listen_for_request again()
+			Error_Handler();
 		}
 	}
 }
