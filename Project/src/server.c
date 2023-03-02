@@ -5,14 +5,14 @@
 #include <string.h>
 #define REQUEST_SIZE			2
 #define RX_BUFFER_SIZE			4
-#define TX_BUFFER_SIZE			3100
+#define TX_BUFFER_SIZE			10
 
 enum message_type{
 	message_type_test = 0,
 	message_type_reset = 1,
 	message_type_get_reading = 2,
 	message_type_start_stream = 3,
-	message_type_stream_chunk = 4,
+	message_type_stop_stream = 4,
 	message_type_read_register = 5
 	};
 
@@ -50,15 +50,15 @@ void server_send_measurmenets_chunk(const reading_t* const readings, uint16_t si
 		Error_Handler();
 	}
 
-	ctx.tx_buffer[0] = message_type_stream_chunk;
-	ctx.tx_buffer[1] = 0x00;
+	// ctx.tx_buffer[0] = message_type_stream_chunk;
+	// ctx.tx_buffer[1] = 0x00;
 
-	for(uint16_t i = 0; i < size; i++) {
-		ctx.tx_buffer[2 + i] = ((uint8_t *)readings)[i];
-	}
+	// for(uint16_t i = 0; i < size; i++) {
+	// 	ctx.tx_buffer[2 + i] = ((uint8_t *)readings)[i];
+	// }
 
 	//memcpy((void *) &ctx.tx_buffer[2], (void *) readings, size);
-	HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart2, ctx.tx_buffer, size + 2);
+	HAL_StatusTypeDef status = HAL_UART_Transmit_DMA(&huart2, (uint8_t *) readings, size);
 	if (status != HAL_OK) {
 		Error_Handler();
 	}
@@ -106,6 +106,10 @@ static void handle_request_if_any(void) {
 		case message_type_start_stream: {
 			sensor_start_stream();
 			send_response(message_type_start_stream, 0, NULL, 0);
+			break;
+		}
+		case message_type_stop_stream: {
+			sensor_stop_stream();
 			break;
 		}
 		default:
