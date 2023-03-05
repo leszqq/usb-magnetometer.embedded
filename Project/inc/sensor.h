@@ -36,6 +36,12 @@ enum axis {
     AXIS_ALL
 };
 
+enum sensor_range {
+    sensor_range_plus_minus_50_mt = 0,
+    sensor_range_plus_minus_25_mt = 1,
+    sensor_range_plus_minus_100_mt = 2
+};
+
 typedef struct reading {
     uint16_t x;
     uint16_t y;
@@ -44,19 +50,11 @@ typedef struct reading {
 static_assert(sizeof(reading_t) == 6);
 
 void sensor_reset();
-
 void sensor_run();
-
-void sensor_configure_for_active();
-
-void sensor_put_to_sleep();
-
 void sensor_read();
-
 void sensor_start_stream();
-
 void sensor_stop_stream();
-
 void sensor_read_register(enum sensor_reg reg, uint16_t* content);
+void sensor_set_range(enum sensor_range range);
 
 #endif /* INC_SENSOR_H_ */

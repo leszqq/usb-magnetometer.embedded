@@ -13,7 +13,8 @@ enum message_type{
 	message_type_get_reading = 2,
 	message_type_start_stream = 3,
 	message_type_stop_stream = 4,
-	message_type_read_register = 5
+	message_type_read_register = 5,
+	message_type_set_range = 6
 	};
 
 struct request {
@@ -110,6 +111,11 @@ static void handle_request_if_any(void) {
 		}
 		case message_type_stop_stream: {
 			sensor_stop_stream();
+			break;
+		}
+		case message_type_set_range: {
+			sensor_set_range(request.data);
+			send_response(message_type_set_range, 0, NULL, 0);
 			break;
 		}
 		default:

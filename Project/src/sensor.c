@@ -15,6 +15,7 @@ enum sensor_state {
 };
 
 
+
 static struct {
     enum sensor_state sensor_state;
     uint8_t tx_buffer[TX_BUFFER_SIZE];
@@ -25,6 +26,7 @@ static struct {
     bool use_first_readings_buffer;
     bool stop_stream_request;
     bool last_stream_chunk;
+    enum sensor_range range;
 } ctx;
 
 static void disable_crc();
@@ -34,14 +36,16 @@ static void disable_drdy_interrupt();
 
 void sensor_reset(){
     if (sensor_state_streaming == ctx.sensor_state) {
-        write_reg(DEVICE_CONFIG, 0 << 4, false);
+        write_reg(DEVICE_CONFIG, 0 << 4, false);    
     }
-
+    ctx.range = sensor_range_plus_minus_50_mt;
     ctx.sensor_state = sensor_state_config;
+
     uint16_t tmp;
     sensor_read_register(AFE_STATUS, &tmp);
     disable_crc();
-    write_reg(SENSOR_CONFIG, 0x07 << 6, false);    // enable data acquisition for X, Y and Z axes
+    // enable data acquisition for X, Y and Z axes
+    write_reg(SENSOR_CONFIG, 0x07 << 6 | (ctx.range << 4) | (ctx.range << 2) | ctx.range, false);
     write_reg(ALERT_CONFIG, 1 << 8, false);        // signal generated on #ALERT pin on complete conversion
 }
 
@@ -90,12 +94,13 @@ void sensor_run(){
 }
 
 void sensor_read(){
-    write_reg(SENSOR_CONFIG, 0x07 << 6, true);
+    write_reg(SENSOR_CONFIG, 0x07 << 6 | (ctx.range << 4) | (ctx.range << 2) | ctx.range, true);
     ctx.sensor_state = sensor_state_single_reading;
     enable_drdy_interrupt();
 }
 
 void sensor_start_stream(){
+    write_reg(SENSOR_CONFIG, 0x07 << 6 | (ctx.range << 4) | (ctx.range << 2) | ctx.range, false);
     write_reg(DEVICE_CONFIG, (0x02 << 4) | (0x02 << 12), true);
     ctx.sensor_state = sensor_state_streaming;
     enable_drdy_interrupt();
@@ -123,6 +128,11 @@ void sensor_read_register(enum sensor_reg reg, uint16_t* content){
     *content = 0x0000 | (ctx.rx_buffer[2] << 8) | ctx.rx_buffer[1];
 }
 
+void sensor_set_range(enum sensor_range range) {
+    ctx.range = range;
+    write_reg(SENSOR_CONFIG, 0x07 << 6 | (ctx.range << 4) | (ctx.range << 2) | ctx.range, false);
+}
+
 static void disable_crc(){
     ctx.tx_buffer[0] = DISABLE_CRC_B3;
     ctx.tx_buffer[1] = DISABLE_CRC_B2;
@@ -137,7 +147,9 @@ static void disable_crc(){
 }
 
 static void write_reg(enum sensor_reg reg, uint16_t content, bool trigger_conversion){
-    //while (HAL_SPI_STATE_READY != HAL_SPI_GetState(&hspi1)) {}
+    if (HAL_SPI_STATE_READY != HAL_SPI_GetState(&hspi1))
+        Error_Handler();
+
     ctx.tx_buffer[0] = reg;
     ctx.tx_buffer[1] = (uint8_t) (content >> 8);
     ctx.tx_buffer[2] = (uint8_t) content;
