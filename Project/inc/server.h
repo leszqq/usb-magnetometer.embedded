@@ -13,7 +13,7 @@
 void server_init(void);
 void server_run(void);
 void server_send_measurmenets_chunk(const reading_t* const readings, uint16_t size);
-void server_send_reading(const reading_t* const reading);
+void server_send_reading(const reading_scaled_t* const reading);
 
 
 

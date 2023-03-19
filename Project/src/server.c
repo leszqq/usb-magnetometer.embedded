@@ -65,7 +65,7 @@ void server_send_measurmenets_chunk(const reading_t* const readings, uint16_t si
 	}
 }
 
-void server_send_reading(const reading_t* const reading){
+void server_send_reading(const reading_scaled_t* const reading){
 	send_response(message_type_get_reading, 0, (uint8_t*) reading, sizeof(*reading));
 }
 

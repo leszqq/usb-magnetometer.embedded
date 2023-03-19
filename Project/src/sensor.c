@@ -31,6 +31,7 @@ static struct {
 
 static void disable_crc();
 static void write_reg(enum sensor_reg reg, uint16_t content, bool trigger_conversion);
+static void scale(const reading_t* const reading, reading_scaled_t* const reading_scaled);
 static void enable_drdy_interrupt();
 static void disable_drdy_interrupt();
 
@@ -88,7 +89,9 @@ void sensor_run(){
             sensor_read_register(Y_CH_RESULT, &result.y);
             sensor_read_register(Z_CH_RESULT, &result.z);
             ctx.data_ready = false;
-            server_send_reading(&result);
+            reading_scaled_t reading_scaled;
+            scale(&result, &reading_scaled);
+            server_send_reading(&reading_scaled);
         }
     }
 }
@@ -125,7 +128,7 @@ void sensor_read_register(enum sensor_reg reg, uint16_t* content){
     if (HAL_OK != status) {
         Error_Handler();
     }
-    *content = 0x0000 | (ctx.rx_buffer[2] << 8) | ctx.rx_buffer[1];
+    *content = 0x0000 | (ctx.rx_buffer[1] << 8) | ctx.rx_buffer[2];
 }
 
 void sensor_set_range(enum sensor_range range) {
@@ -160,6 +163,13 @@ static void write_reg(enum sensor_reg reg, uint16_t content, bool trigger_conver
     if (HAL_OK != status) {
         Error_Handler();
     }
+}
+
+static void scale(const reading_t* const reading, reading_scaled_t* const reading_scaled) {
+    float range_f = (sensor_range_plus_minus_25_mt == ctx.range) ? 0.025 : (sensor_range_plus_minus_50_mt == ctx.range) ? 0.05 : 0.1;
+    reading_scaled->x = ((2.0 * ( - (reading->x & 0x8000)  + (reading->x & 0x7FFF))) / 65536.0) * range_f;
+    reading_scaled->y = ((2.0 * ( - (reading->y & 0x8000)  + (reading->y & 0x7FFF))) / 65536.0) * range_f;
+    reading_scaled->z = ((2.0 * ( - (reading->z & 0x8000)  + (reading->z & 0x7FFF))) / 65536.0) * range_f;
 }
 
 static void enable_drdy_interrupt() {

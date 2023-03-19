@@ -49,6 +49,14 @@ typedef struct reading {
 } reading_t;
 static_assert(sizeof(reading_t) == 6);
 
+typedef struct reading_scaled {
+    float x;
+    float y;
+    float z;
+
+} reading_scaled_t;
+static_assert(sizeof(reading_scaled_t) == 12);
+
 void sensor_reset();
 void sensor_run();
 void sensor_read();
