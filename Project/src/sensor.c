@@ -6,7 +6,7 @@
 
 #define TX_BUFFER_SIZE                  16
 #define RX_BUFFER_SIZE                  16
-#define STREAM_CHUNK_SIZE               5
+#define STREAM_CHUNK_SIZE               10
 
 enum sensor_state {
     sensor_state_config = 0,
