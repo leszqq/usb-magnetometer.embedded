@@ -6,7 +6,7 @@
 
 #define TX_BUFFER_SIZE                  16
 #define RX_BUFFER_SIZE                  16
-#define STREAM_CHUNK_SIZE               20
+#define STREAM_CHUNK_SIZE               5
 
 enum sensor_state {
     sensor_state_config = 0,
@@ -97,6 +97,7 @@ void sensor_run(){
 }
 
 void sensor_read(){
+    write_reg(DEVICE_CONFIG, 0x00 << 4 | 0x05 << 12, false);
     write_reg(SENSOR_CONFIG, 0x07 << 6 | (ctx.range << 4) | (ctx.range << 2) | ctx.range, true);
     ctx.sensor_state = sensor_state_single_reading;
     enable_drdy_interrupt();
@@ -104,7 +105,7 @@ void sensor_read(){
 
 void sensor_start_stream(){
     write_reg(SENSOR_CONFIG, 0x07 << 6 | (ctx.range << 4) | (ctx.range << 2) | ctx.range, false);
-    write_reg(DEVICE_CONFIG, (0x02 << 4) | (0x04 << 12), true);
+    write_reg(DEVICE_CONFIG, (0x02 << 4) | (0x05 << 12), true);
     ctx.sensor_state = sensor_state_streaming;
     enable_drdy_interrupt();
 }
